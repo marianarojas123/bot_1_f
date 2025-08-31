@@ -4,12 +4,31 @@ from flask_login import LoginManager, UserMixin, login_user, login_required, log
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timedelta
 import os
-from config import get_config
+from render_config import get_config
 from security import SecurityManager, rate_limit, log_security_event, add_security_headers
 
 # Inicializar Flask
 app = Flask(__name__)
 app.config.from_object(get_config())
+
+# Configuración de logging para producción
+if not os.path.exists('logs'):
+    os.mkdir('logs')
+
+if os.environ.get('RENDER'):
+    import logging
+    from logging.handlers import RotatingFileHandler
+    
+    file_handler = RotatingFileHandler('logs/bot_financiero.log', maxBytes=10240, backupCount=10)
+    file_handler.setFormatter(logging.Formatter(
+        '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
+    ))
+    file_handler.setLevel(logging.INFO)
+    app.logger.addHandler(file_handler)
+    app.logger.setLevel(logging.INFO)
+    app.logger.info('Bot Financiero startup en Render')
+else:
+    app.logger.info('Bot Financiero startup en desarrollo local')
 
 # Inicializar extensiones
 db = SQLAlchemy(app)
@@ -713,14 +732,21 @@ def api_distribucion(ingreso_id):
         'monto': dist.monto_asignado
     } for dist in distribuciones])
 
-# Manejo de errores
+# Manejadores de errores para producción
 @app.errorhandler(404)
 def not_found_error(error):
+    app.logger.error(f'Page not found: {request.url}')
     return render_template('404.html'), 404
 
 @app.errorhandler(500)
 def internal_error(error):
     db.session.rollback()
+    app.logger.error(f'Server Error: {error}')
+    return render_template('500.html'), 500
+
+@app.errorhandler(Exception)
+def handle_exception(e):
+    app.logger.error(f'Unhandled exception: {str(e)}')
     return render_template('500.html'), 500
 
 # Middleware para agregar headers de seguridad
@@ -728,65 +754,47 @@ def internal_error(error):
 def add_security_headers_after_request(response):
     return add_security_headers(response)
 
-# Función para crear usuario admin por defecto
+# Función para crear usuario administrador
 def create_admin_user():
-    """Crea usuario administrador por defecto si no existe"""
-    admin_user = User.query.filter_by(username='admin').first()
-    if not admin_user:
-        admin_user = User(
+    try:
+        # Verificar si ya existe un administrador
+        admin = User.query.filter_by(role='admin').first()
+        if admin:
+            app.logger.info('Administrador ya existe')
+            return
+        
+        # Crear usuario administrador por defecto
+        admin = User(
             username='admin',
             email='admin@botfinanciero.com',
+            password_hash=generate_password_hash('admin123'),
             role='admin',
             nombre_completo='Administrador del Sistema',
+            telefono='+1234567890',
             departamento='Administración',
+            salario=0,
+            fecha_contratacion=datetime.now(),
+            permisos_especiales='all',
             is_active=True
         )
-        admin_user.set_password('admin123')
-        db.session.add(admin_user)
+        
+        db.session.add(admin)
         db.session.commit()
-        print("Usuario administrador creado: admin / admin123")
-    
-    # Crear usuario empleado de ejemplo
-    empleado_user = User.query.filter_by(username='empleado').first()
-    if not empleado_user:
-        empleado_user = User(
-            username='empleado',
-            email='empleado@botfinanciero.com',
-            role='empleado',
-            nombre_completo='Empleado Ejemplo',
-            departamento='Ventas',
-            salario=2500.00,
-            fecha_contratacion=datetime.utcnow(),
-            is_active=True
-        )
-        empleado_user.set_password('empleado123')
-        db.session.add(empleado_user)
-        db.session.commit()
-        print("Usuario empleado creado: empleado / empleado123")
-    
-    # Crear usuario cliente de ejemplo
-    cliente_user = User.query.filter_by(username='cliente').first()
-    if not cliente_user:
-        cliente_user = User(
-            username='cliente',
-            email='cliente@botfinanciero.com',
-            role='cliente',
-            nombre_completo='Cliente Ejemplo',
-            departamento='Cliente',
-            is_active=True
-        )
-        cliente_user.set_password('cliente123')
-        db.session.add(cliente_user)
-        db.session.commit()
-        print("Usuario cliente creado: cliente / cliente123")
+        app.logger.info('Usuario administrador creado exitosamente')
+        
+    except Exception as e:
+        app.logger.error(f'Error creando administrador: {str(e)}')
+        db.session.rollback()
 
 # Función para inicializar la base de datos
 def init_db():
-    """Inicializa la base de datos"""
-    with app.app_context():
-        db.create_all()
-        create_admin_user()
-        print("Base de datos inicializada correctamente")
+    try:
+        with app.app_context():
+            db.create_all()
+            create_admin_user()
+            app.logger.info('Base de datos inicializada correctamente')
+    except Exception as e:
+        app.logger.error(f'Error inicializando base de datos: {str(e)}')
 
 if __name__ == '__main__':
     # Inicializar base de datos
