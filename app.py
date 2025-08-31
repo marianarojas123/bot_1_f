@@ -1,34 +1,55 @@
+import os
 from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timedelta
-import os
-from render_config import get_config
-from security import SecurityManager, rate_limit, log_security_event, add_security_headers
 
 # Inicializar Flask
 app = Flask(__name__)
-app.config.from_object(get_config())
 
-# Configuración de logging para producción
-if not os.path.exists('logs'):
-    os.mkdir('logs')
+# Configuración simple y robusta para Render
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'clave-secreta-por-defecto-cambiar-en-produccion')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///bot_financiero.db')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['DEBUG'] = False
+app.config['TESTING'] = False
 
-if os.environ.get('RENDER'):
-    import logging
-    from logging.handlers import RotatingFileHandler
-    
-    file_handler = RotatingFileHandler('logs/bot_financiero.log', maxBytes=10240, backupCount=10)
-    file_handler.setFormatter(logging.Formatter(
-        '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
-    ))
-    file_handler.setLevel(logging.INFO)
-    app.logger.addHandler(file_handler)
-    app.logger.setLevel(logging.INFO)
-    app.logger.info('Bot Financiero startup en Render')
-else:
-    app.logger.info('Bot Financiero startup en desarrollo local')
+# Configuración de sesiones
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=24)
+app.config['SESSION_COOKIE_SECURE'] = False  # Cambiado a False para evitar problemas en Render
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+
+# Configuración de seguridad
+app.config['WTF_CSRF_ENABLED'] = False  # Deshabilitado temporalmente para evitar errores
+app.config['WTF_CSRF_TIME_LIMIT'] = 3600
+
+# Configuración de distribución de sueldo
+app.config['DISTRIBUCION_SUELDO'] = {
+    'gastos_fijos': 0.50,      # 50% gastos básicos
+    'ahorro': 0.20,            # 20% ahorro
+    'educacion': 0.15,         # 15% educación
+    'disfrute': 0.10,          # 10% disfrute
+    'donacion': 0.05            # 5% donación
+}
+
+# Configuración de categorías de ingresos
+app.config['CATEGORIAS_INGRESOS'] = [
+    'Salario', 'Freelance', 'Inversiones', 'Otros'
+]
+
+# Configuración de paginación
+app.config['ITEMS_PER_PAGE'] = 10
+
+# Configuración del chat bot
+app.config['CHAT_BOT_RESPUESTAS'] = {
+    'distribución': 'La distribución automática del sueldo es: 50% gastos básicos, 20% ahorro, 15% educación, 10% disfrute, 5% donación.',
+    'ahorro': 'El 20% de tu ingreso se destina automáticamente al ahorro. Te recomendamos mantener esta proporción.',
+    'gastos': 'El 50% se destina a gastos básicos como vivienda, alimentación y servicios.',
+    'educación': 'El 15% se destina a tu desarrollo profesional: cursos, libros, certificaciones.',
+    'presupuesto': 'El sistema calcula automáticamente la distribución de cada ingreso que registres.',
+    'ayuda': 'Puedes preguntarme sobre: distribución, ahorro, gastos, educación, presupuesto, etc.'
+}
 
 # Inicializar extensiones
 db = SQLAlchemy(app)
@@ -37,9 +58,19 @@ login_manager.init_app(app)
 login_manager.login_view = 'login'
 login_manager.login_message = 'Por favor inicia sesión para acceder a esta página.'
 
-# Configurar secret key
-if not app.config.get('SECRET_KEY'):
-    app.config['SECRET_KEY'] = 'dev-secret-key-change-in-production'
+# Configuración de logging simple
+import logging
+if not os.path.exists('logs'):
+    os.mkdir('logs')
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s %(levelname)s: %(message)s',
+    handlers=[
+        logging.FileHandler('logs/bot_financiero.log'),
+        logging.StreamHandler()
+    ]
+)
 
 # Modelos de base de datos
 class User(UserMixin, db.Model):
@@ -233,101 +264,109 @@ def index():
     return render_template('index.html')
 
 @app.route('/login', methods=['GET', 'POST'])
-@rate_limit(5, 900)  # 5 intentos por 15 minutos
 def login():
     """Página de inicio de sesión"""
-    if current_user.is_authenticated:
-        return redirect(url_for('dashboard'))
-    
-    if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
+    try:
+        if current_user.is_authenticated:
+            return redirect(url_for('dashboard'))
         
-        if not username or not password:
-            flash('Por favor completa todos los campos', 'error')
-            return render_template('login.html')
-        
-        user = User.query.filter_by(username=username).first()
-        
-        if user and user.check_password(password) and user.is_active:
-            login_user(user)
-            user.last_login = datetime.utcnow()
-            db.session.commit()
+        if request.method == 'POST':
+            username = request.form.get('username')
+            password = request.form.get('password')
             
-            log_security_event('login_success', user.id, {'ip': request.remote_addr})
-            flash(f'¡Bienvenido, {user.username}!', 'success')
+            if not username or not password:
+                flash('Por favor completa todos los campos', 'error')
+                return render_template('login.html')
             
-            next_page = request.args.get('next')
-            return redirect(next_page or url_for('dashboard'))
-        else:
-            log_security_event('login_failed', None, {'username': username, 'ip': request.remote_addr})
-            flash('Usuario o contraseña incorrectos', 'error')
-    
-    return render_template('login.html')
+            user = User.query.filter_by(username=username).first()
+            
+            if user and user.check_password(password) and user.is_active:
+                login_user(user)
+                user.last_login = datetime.utcnow()
+                db.session.commit()
+                
+                app.logger.info(f'Login exitoso para usuario: {username}')
+                flash(f'¡Bienvenido, {user.username}!', 'success')
+                
+                next_page = request.args.get('next')
+                return redirect(next_page or url_for('dashboard'))
+            else:
+                app.logger.warning(f'Login fallido para usuario: {username}')
+                flash('Usuario o contraseña incorrectos', 'error')
+        
+        return render_template('login.html')
+    except Exception as e:
+        app.logger.error(f'Error en login: {str(e)}')
+        flash('Error interno del servidor. Intenta nuevamente.', 'error')
+        return render_template('login.html')
 
 @app.route('/registro', methods=['GET', 'POST'])
-@rate_limit(3, 3600)  # 3 registros por hora
 def registro():
     """Página de registro de usuarios"""
-    if current_user.is_authenticated:
-        return redirect(url_for('dashboard'))
-    
-    if request.method == 'POST':
-        username = request.form.get('username')
-        email = request.form.get('email')
-        password = request.form.get('password')
-        confirm_password = request.form.get('confirm_password')
-        role = request.form.get('role', 'empleado')
+    try:
+        if current_user.is_authenticated:
+            return redirect(url_for('dashboard'))
         
-        # Validaciones
-        if not all([username, email, password, confirm_password]):
-            flash('Por favor completa todos los campos', 'error')
-            return render_template('registro.html')
-        
-        if password != confirm_password:
-            flash('Las contraseñas no coinciden', 'error')
-            return render_template('registro.html')
-        
-        # Validar contraseña fuerte
-        is_valid, message = SecurityManager.validate_password(password)
-        if not is_valid:
-            flash(message, 'error')
-            return render_template('registro.html')
-        
-        # Verificar si el usuario ya existe
-        if User.query.filter_by(username=username).first():
-            flash('El nombre de usuario ya está en uso', 'error')
-            return render_template('registro.html')
-        
-        if User.query.filter_by(email=email).first():
-            flash('El email ya está registrado', 'error')
-            return render_template('registro.html')
-        
-        # Crear usuario
-        user = User(username=username, email=email, role=role)
-        user.set_password(password)
-        
-        try:
-            db.session.add(user)
-            db.session.commit()
+        if request.method == 'POST':
+            username = request.form.get('username')
+            email = request.form.get('email')
+            password = request.form.get('password')
+            confirm_password = request.form.get('confirm_password')
+            role = request.form.get('role', 'empleado')
             
-            log_security_event('user_registered', user.id, {'role': role, 'ip': request.remote_addr})
-            flash('Usuario registrado exitosamente. Por favor inicia sesión.', 'success')
-            return redirect(url_for('login'))
-        except Exception as e:
-            db.session.rollback()
-            flash('Error al registrar usuario. Intenta nuevamente.', 'error')
-    
-    return render_template('registro.html')
+            # Validaciones básicas
+            if not all([username, email, password, confirm_password]):
+                flash('Por favor completa todos los campos', 'error')
+                return render_template('registro.html')
+            
+            if password != confirm_password:
+                flash('Las contraseñas no coinciden', 'error')
+                return render_template('registro.html')
+            
+            # Verificar si el usuario ya existe
+            if User.query.filter_by(username=username).first():
+                flash('El nombre de usuario ya está en uso', 'error')
+                return render_template('registro.html')
+            
+            if User.query.filter_by(email=email).first():
+                flash('El email ya está registrado', 'error')
+                return render_template('registro.html')
+            
+            # Crear usuario
+            user = User(username=username, email=email, role=role)
+            user.set_password(password)
+            
+            try:
+                db.session.add(user)
+                db.session.commit()
+                
+                app.logger.info(f'Usuario registrado: {username} con rol: {role}')
+                flash('Usuario registrado exitosamente. Por favor inicia sesión.', 'success')
+                return redirect(url_for('login'))
+            except Exception as e:
+                db.session.rollback()
+                app.logger.error(f'Error registrando usuario: {str(e)}')
+                flash('Error al registrar usuario. Intenta nuevamente.', 'error')
+        
+        return render_template('registro.html')
+    except Exception as e:
+        app.logger.error(f'Error en registro: {str(e)}')
+        flash('Error interno del servidor. Intenta nuevamente.', 'error')
+        return render_template('registro.html')
 
 @app.route('/logout')
 @login_required
 def logout():
     """Cerrar sesión"""
-    log_security_event('logout', current_user.id, {'ip': request.remote_addr})
-    logout_user()
-    flash('Has cerrado sesión exitosamente', 'info')
-    return redirect(url_for('index'))
+    try:
+        username = current_user.username
+        logout_user()
+        app.logger.info(f'Usuario cerró sesión: {username}')
+        flash('Has cerrado sesión exitosamente', 'info')
+        return redirect(url_for('index'))
+    except Exception as e:
+        app.logger.error(f'Error en logout: {str(e)}')
+        return redirect(url_for('index'))
 
 @app.route('/dashboard')
 @login_required
