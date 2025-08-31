@@ -59,7 +59,7 @@
                         <i class="fas fa-user-tie fa-2x"></i>
                     </div>
                     <div>
-                        <h4 class="mb-0">{{ usuarios_recientes|selectattr('role', 'equalto', 'admin')|list|length }}</h4>
+                        <h4 class="mb-0">{{ usuarios_por_rol.admin }}</h4>
                         <small>Administradores</small>
                     </div>
                 </div>
@@ -73,7 +73,7 @@
                         <i class="fas fa-user fa-2x"></i>
                     </div>
                     <div>
-                        <h4 class="mb-0">{{ usuarios_recientes|selectattr('role', 'equalto', 'empleado')|list|length }}</h4>
+                        <h4 class="mb-0">{{ usuarios_por_rol.empleado }}</h4>
                         <small>Empleados</small>
                     </div>
                 </div>
@@ -182,21 +182,21 @@
                     <div class="row text-center">
                         <div class="col-6">
                             <div class="bg-danger text-white rounded p-3 mb-2">
-                                <h4 class="mb-0">{{ usuarios_recientes|selectattr('role', 'equalto', 'admin')|list|length }}</h4>
+                                <h4 class="mb-0">{{ usuarios_por_rol.admin }}</h4>
                                 <small>Administradores</small>
                             </div>
                         </div>
                         <div class="col-6">
                             <div class="bg-primary text-white rounded p-3 mb-2">
-                                <h4 class="mb-0">{{ usuarios_recientes|selectattr('role', 'equalto', 'empleado')|list|length }}</h4>
+                                <h4 class="mb-0">{{ usuarios_por_rol.empleado }}</h4>
                                 <small>Empleados</small>
                             </div>
                         </div>
                     </div>
                     <div class="mt-3">
                         <div class="progress">
-                            <div class="progress-bar bg-danger" style="width: {{ (usuarios_recientes|selectattr('role', 'equalto', 'admin')|list|length / total_usuarios * 100)|round(1) }}%"></div>
-                            <div class="progress-bar bg-primary" style="width: {{ (usuarios_recientes|selectattr('role', 'equalto', 'empleado')|list|length / total_usuarios * 100)|round(1) }}%"></div>
+                            <div class="progress-bar bg-danger" style="width: {{ (usuarios_por_rol.admin / total_usuarios * 100)|round(1) }}%"></div>
+                            <div class="progress-bar bg-primary" style="width: {{ (usuarios_por_rol.empleado / total_usuarios * 100)|round(1) }}%"></div>
                         </div>
                     </div>
                 </div>
