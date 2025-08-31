@@ -1,0 +1,274 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Bot Financiero{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Header del Dashboard -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h1 class="display-6 fw-bold text-primary mb-2">
+                        <i class="fas fa-chart-line me-3"></i>Dashboard Financiero
+                    </h1>
+                    <p class="lead text-muted">Bienvenido, {{ current_user.username }}. Aquí tienes un resumen de tu situación financiera.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tarjetas de Estadísticas -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="stats-card">
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        <i class="fas fa-dollar-sign fa-2x"></i>
+                    </div>
+                    <div>
+                        <h4 class="mb-0">${{ "%.2f"|format(total_ingresos) }}</h4>
+                        <small>Total Ingresos</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="stats-card">
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        <i class="fas fa-home fa-2x"></i>
+                    </div>
+                    <div>
+                        <h4 class="mb-0">${{ "%.2f"|format(distribucion.gastos_fijos) }}</h4>
+                        <small>Gastos Fijos</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="stats-card">
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        <i class="fas fa-piggy-bank fa-2x"></i>
+                    </div>
+                    <div>
+                        <h4 class="mb-0">${{ "%.2f"|format(distribucion.ahorro) }}</h4>
+                        <small>Ahorro</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="stats-card">
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        <i class="fas fa-graduation-cap fa-2x"></i>
+                    </div>
+                    <div>
+                                                 <h4 class="mb-0">${{ "%.2f"|format(distribucion.educacion) }}</h4>
+                         <small>Educación</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Distribución del Sueldo -->
+    <div class="row mb-4">
+        <div class="col-md-8 mb-3">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-pie-chart me-2"></i>Distribución Automática del Sueldo
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="distribution-item">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1">
+                                            <i class="fas fa-home text-primary me-2"></i>Gastos Fijos
+                                        </h6>
+                                        <small class="text-muted">Vivienda, servicios, seguros</small>
+                                    </div>
+                                    <div class="text-end">
+                                                                                 <h5 class="mb-0 text-primary">50%</h5>
+                                        <small class="text-muted">${{ "%.2f"|format(distribucion.gastos_fijos) }}</small>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="distribution-item">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1">
+                                            <i class="fas fa-graduation-cap text-info me-2"></i>Educación
+                                        </h6>
+                                        <small class="text-muted">Cursos, libros, desarrollo profesional</small>
+                                    </div>
+                                    <div class="text-end">
+                                        <h5 class="mb-0 text-info">15%</h5>
+                                        <small class="text-muted">${{ "%.2f"|format(distribucion.educacion) }}</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="distribution-item">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1">
+                                            <i class="fas fa-smile text-warning me-2"></i>Disfrute
+                                        </h6>
+                                        <small class="text-muted">Entretenimiento, hobbies, viajes</small>
+                                    </div>
+                                    <div class="text-end">
+                                        <h5 class="mb-0 text-warning">10%</h5>
+                                        <small class="text-muted">${{ "%.2f"|format(distribucion.disfrute) }}</small>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="distribution-item">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1">
+                                            <i class="fas fa-piggy-bank text-success me-2"></i>Ahorro
+                                        </h6>
+                                        <small class="text-muted">Fondo de emergencia</small>
+                                    </div>
+                                    <div class="text-end">
+                                        <h5 class="mb-0 text-success">20%</h5>
+                                        <small class="text-muted">${{ "%.2f"|format(distribucion.ahorro) }}</small>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="distribution-item">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1">
+                                            <i class="fas fa-heart text-danger me-2"></i>Donación
+                                        </h6>
+                                        <small class="text-muted">Causas benéficas, ayuda a otros</small>
+                                    </div>
+                                    <div class="text-end">
+                                        <h5 class="mb-0 text-danger">5%</h5>
+                                        <small class="text-muted">${{ "%.2f"|format(distribucion.donacion) }}</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-3">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-lightbulb me-2"></i>Consejos del Bot
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Tip:</strong> Mantén esta distribución para lograr estabilidad financiera.
+                    </div>
+                    
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle me-2"></i>
+                        <strong>¡Excelente!</strong> Estás ahorrando el 20% de tus ingresos.
+                    </div>
+                    
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Recuerda:</strong> Los gastos fijos no deben superar el 50%.
+                    </div>
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('ingresos') }}" class="btn btn-success">
+                            <i class="fas fa-plus-circle me-2"></i>Registrar Ingreso
+                        </a>
+                        <a href="{{ url_for('libro_diario') }}" class="btn btn-primary">
+                            <i class="fas fa-calendar-day me-2"></i>Libro Diario
+                        </a>
+                        <a href="{{ url_for('libro_mensual') }}" class="btn btn-info">
+                            <i class="fas fa-calendar-alt me-2"></i>Libro Mensual
+                        </a>
+                        <a href="{{ url_for('libro_anual') }}" class="btn btn-warning">
+                            <i class="fas fa-calendar me-2"></i>Libro Anual
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Historial de Ingresos -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-history me-2"></i>Historial de Ingresos Recientes
+                    </h5>
+                    <a href="{{ url_for('ingresos') }}" class="btn btn-outline-light btn-sm">
+                        <i class="fas fa-plus me-2"></i>Nuevo Ingreso
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if ultimos_ingresos %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Descripción</th>
+                                        <th>Categoría</th>
+                                        <th>Monto</th>
+                                        <th>Distribución</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for ingreso in ultimos_ingresos %}
+                                    <tr>
+                                        <td>{{ ingreso.fecha.strftime('%d/%m/%Y') }}</td>
+                                        <td>{{ ingreso.descripcion }}</td>
+                                        <td>
+                                            <span class="badge bg-primary">{{ ingreso.categoria }}</span>
+                                        </td>
+                                        <td class="fw-bold">${{ "%.2f"|format(ingreso.monto) }}</td>
+                                        <td>
+                                            <small class="text-muted">
+                                                50% | 20% | 15% | 10% | 5%
+                                            </small>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No hay ingresos registrados</h5>
+                            <p class="text-muted">Comienza registrando tu primer ingreso para ver la distribución automática.</p>
+                            <a href="{{ url_for('ingresos') }}" class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i>Registrar Primer Ingreso
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

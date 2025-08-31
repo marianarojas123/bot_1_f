@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+
+{% block title %}Libro Diario - Bot Financiero{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <h4 class="mb-0">
+                                <i class="fas fa-calendar-day me-2"></i>Libro Diario
+                            </h4>
+                        </div>
+                        <div class="col-md-6">
+                            <form method="GET" class="d-flex">
+                                <input type="date" class="form-control me-2" name="fecha" value="{{ fecha.strftime('%Y-%m-%d') }}" onchange="this.form.submit()">
+                                <button type="submit" class="btn btn-light">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-4">
+                            <div class="border-end">
+                                <h3 class="text-success">${{ "%.2f"|format(total_ingresos) }}</h3>
+                                <small class="text-muted">Total Ingresos</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="border-end">
+                                <h3 class="text-danger">${{ "%.2f"|format(total_egresos) }}</h3>
+                                <small class="text-muted">Total Egresos</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <h3 class="{% if balance_dia >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                ${{ "%.2f"|format(balance_dia) }}
+                            </h3>
+                            <small class="text-muted">Balance del Día</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Ingresos del Día -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-plus-circle me-2"></i>Ingresos del {{ fecha.strftime('%d/%m/%Y') }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if ingresos %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead class="table-success">
+                                <tr>
+                                    <th>Hora</th>
+                                    <th>Descripción</th>
+                                    <th>Categoría</th>
+                                    <th>Monto</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for ingreso in ingresos %}
+                                <tr>
+                                    <td>{{ ingreso.fecha.strftime('%H:%M') }}</td>
+                                    <td>{{ ingreso.descripcion }}</td>
+                                    <td>
+                                        <span class="badge bg-secondary">{{ ingreso.categoria }}</span>
+                                    </td>
+                                    <td class="text-success fw-bold">${{ "%.2f"|format(ingreso.monto) }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-3">
+                        <i class="fas fa-inbox fa-2x text-muted mb-2"></i>
+                        <p class="text-muted mb-0">No hay ingresos registrados para este día</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Egresos del Día -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-minus-circle me-2"></i>Egresos del {{ fecha.strftime('%d/%m/%Y') }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if egresos %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead class="table-danger">
+                                <tr>
+                                    <th>Hora</th>
+                                    <th>Descripción</th>
+                                    <th>Categoría</th>
+                                    <th>Tipo</th>
+                                    <th>Monto</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for egreso in egresos %}
+                                <tr>
+                                    <td>{{ egreso.fecha.strftime('%H:%M') }}</td>
+                                    <td>{{ egreso.descripcion }}</td>
+                                    <td>
+                                        <span class="badge bg-secondary">{{ egreso.categoria }}</span>
+                                    </td>
+                                    <td>
+                                        {% if egreso.tipo == 'gasto' %}
+                                            <span class="badge bg-danger">Gasto</span>
+                                        {% elif egreso.tipo == 'inversion' %}
+                                            <span class="badge bg-success">Inversión</span>
+                                        {% else %}
+                                            <span class="badge bg-warning">Deuda</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-danger fw-bold">${{ "%.2f"|format(egreso.monto) }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-3">
+                        <i class="fas fa-inbox fa-2x text-muted mb-2"></i>
+                        <p class="text-muted mb-0">No hay egresos registrados para este día</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navegación -->
+    <div class="row mt-4">
+        <div class="col-12 text-center">
+            <div class="btn-group" role="group">
+                <button type="button" class="btn btn-outline-primary" onclick="cambiarFecha(-1)">
+                    <i class="fas fa-chevron-left me-2"></i>Día Anterior
+                </button>
+                <a href="{{ url_for('libro_diario') }}" class="btn btn-primary">Hoy</a>
+                <button type="button" class="btn btn-outline-primary" onclick="cambiarFecha(1)">
+                    Día Siguiente<i class="fas fa-chevron-right ms-2"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Enlaces a otros libros -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-book me-2"></i>Otros Libros Contables
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                        <a href="{{ url_for('libro_mensual') }}" class="btn btn-outline-success">
+                            <i class="fas fa-calendar-alt me-2"></i>Libro Mensual
+                        </a>
+                        <a href="{{ url_for('libro_anual') }}" class="btn btn-outline-warning">
+                            <i class="fas fa-calendar me-2"></i>Libro Anual
+                        </a>
+                        <a href="{{ url_for('gestionar_ingresos') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-plus-circle me-2"></i>Registrar Ingreso
+                        </a>
+                        <a href="{{ url_for('gestionar_egresos') }}" class="btn btn-outline-danger">
+                            <i class="fas fa-minus-circle me-2"></i>Registrar Egreso
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Auto-submit del formulario cuando cambie la fecha
+    document.addEventListener('DOMContentLoaded', function() {
+        const dateInput = document.querySelector('input[name="fecha"]');
+        if (dateInput) {
+            dateInput.addEventListener('change', function() {
+                this.form.submit();
+            });
+        }
+    });
+
+    // Función para cambiar la fecha
+    function cambiarFecha(dias) {
+        const fechaActual = new Date('{{ fecha.strftime("%Y-%m-%d") }}');
+        fechaActual.setDate(fechaActual.getDate() + dias);
+        
+        const fechaFormateada = fechaActual.toISOString().split('T')[0];
+        window.location.href = '{{ url_for("libro_diario") }}?fecha=' + fechaFormateada;
+    }
+</script>
+{% endblock %}

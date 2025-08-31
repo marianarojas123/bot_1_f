@@ -1,0 +1,514 @@
+{% extends "base.html" %}
+
+{% block title %}Panel de Clientes - Bot Financiero{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Header del Panel de Clientes -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h1 class="display-6 fw-bold text-primary mb-2">
+                        <i class="fas fa-user-tie me-3"></i>Panel de Clientes
+                    </h1>
+                    <p class="lead text-muted">Gestión completa de la cartera de clientes</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estadísticas de Clientes -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="stats-card">
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        <i class="fas fa-users fa-2x text-primary"></i>
+                    </div>
+                    <div>
+                        <h4 class="mb-0">{{ clientes|length }}</h4>
+                        <small>Total Clientes</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="stats-card">
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        <i class="fas fa-star fa-2x text-warning"></i>
+                    </div>
+                    <div>
+                        <h4 class="mb-0">{{ clientes|selectattr('categoria', 'equalto', 'Premium')|list|length }}</h4>
+                        <small>Clientes Premium</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="stats-card">
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        <i class="fas fa-toggle-on fa-2x text-success"></i>
+                    </div>
+                    <div>
+                        <h4 class="mb-0">{{ clientes|selectattr('estado', 'equalto', 'Activo')|list|length }}</h4>
+                        <small>Clientes Activos</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="stats-card">
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        <i class="fas fa-plus-circle fa-2x text-info"></i>
+                    </div>
+                    <div>
+                        <h4 class="mb-0">{{ clientes|selectattr('estado', 'equalto', 'Prospecto')|list|length }}</h4>
+                        <small>Prospectos</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Acciones del Panel -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-cogs me-2"></i>Acciones del Panel
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-2">
+                            <a href="{{ url_for('nuevo_cliente') }}" class="btn btn-success w-100">
+                                <i class="fas fa-user-plus me-2"></i>Nuevo Cliente
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <button class="btn btn-info w-100" onclick="importarClientes()">
+                                <i class="fas fa-upload me-2"></i>Importar
+                            </button>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <button class="btn btn-warning w-100" onclick="exportarClientes()">
+                                <i class="fas fa-download me-2"></i>Exportar
+                            </button>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <button class="btn btn-primary w-100" onclick="comunicacionMasiva()">
+                                <i class="fas fa-bullhorn me-2"></i>Comunicar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros y Búsqueda -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <input type="text" class="form-control" id="searchNombre" placeholder="Buscar por nombre...">
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <select class="form-select" id="filterCategoria">
+                                <option value="">Todas las categorías</option>
+                                <option value="Básico">Básico</option>
+                                <option value="Estándar">Estándar</option>
+                                <option value="Premium">Premium</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <select class="form-select" id="filterEstado">
+                                <option value="">Todos los estados</option>
+                                <option value="Prospecto">Prospecto</option>
+                                <option value="Activo">Activo</option>
+                                <option value="Inactivo">Inactivo</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <select class="form-select" id="filterOrigen">
+                                <option value="">Todos los orígenes</option>
+                                <option value="Web">Web</option>
+                                <option value="Referido">Referido</option>
+                                <option value="Marketing">Marketing</option>
+                                <option value="Evento">Evento</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <button class="btn btn-outline-secondary w-100" onclick="limpiarFiltros()">
+                                <i class="fas fa-times me-2"></i>Limpiar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla de Clientes -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list me-2"></i>Lista de Clientes
+                    </h5>
+                    <span class="badge bg-light text-dark">{{ clientes|length }} clientes</span>
+                </div>
+                <div class="card-body">
+                    {% if clientes %}
+                        <div class="table-responsive">
+                            <table class="table table-hover" id="tablaClientes">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Cliente</th>
+                                        <th>Contacto</th>
+                                        <th>Categoría</th>
+                                        <th>Estado</th>
+                                        <th>Origen</th>
+                                        <th>Último Contacto</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for cliente in clientes %}
+                                    <tr class="cliente-row" 
+                                        data-nombre="{{ cliente.nombre|lower }}"
+                                        data-categoria="{{ cliente.categoria }}"
+                                        data-estado="{{ cliente.estado }}"
+                                        data-origen="{{ cliente.origen }}">
+                                        <td>{{ cliente.id }}</td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar-circle me-2">
+                                                    <i class="fas fa-user-tie"></i>
+                                                </div>
+                                                <div>
+                                                    <div class="fw-bold">{{ cliente.nombre }}</div>
+                                                    {% if cliente.empresa %}
+                                                        <small class="text-muted">{{ cliente.empresa }}</small>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div>
+                                                <div><i class="fas fa-envelope me-1"></i>{{ cliente.email }}</div>
+                                                {% if cliente.telefono %}
+                                                    <div><i class="fas fa-phone me-1"></i>{{ cliente.telefono }}</div>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            {% if cliente.categoria == 'Premium' %}
+                                                <span class="badge bg-warning">Premium</span>
+                                            {% elif cliente.categoria == 'Estándar' %}
+                                                <span class="badge bg-info">Estándar</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">Básico</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if cliente.estado == 'Activo' %}
+                                                <span class="badge bg-success">Activo</span>
+                                            {% elif cliente.estado == 'Prospecto' %}
+                                                <span class="badge bg-warning">Prospecto</span>
+                                            {% else %}
+                                                <span class="badge bg-danger">Inactivo</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-outline-secondary">{{ cliente.origen }}</span>
+                                        </td>
+                                        <td>
+                                            {% if cliente.ultimo_contacto %}
+                                                <small>{{ cliente.ultimo_contacto.strftime('%d/%m/%Y') }}</small>
+                                            {% else %}
+                                                <span class="text-muted">Nunca</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <a href="{{ url_for('ver_cliente', cliente_id=cliente.id) }}" 
+                                                   class="btn btn-sm btn-outline-primary" title="Ver detalles">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                <button class="btn btn-sm btn-outline-warning" title="Editar" 
+                                                        onclick="editarCliente({{ cliente.id }})">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-info" title="Contactar" 
+                                                        onclick="contactarCliente({{ cliente.id }})">
+                                                    <i class="fas fa-phone"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-success" title="Agregar nota" 
+                                                        onclick="agregarNota({{ cliente.id }})">
+                                                    <i class="fas fa-sticky-note"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No hay clientes registrados</h5>
+                            <p class="text-muted">Comienza agregando tu primer cliente al sistema.</p>
+                            <a href="{{ url_for('nuevo_cliente') }}" class="btn btn-primary">
+                                <i class="fas fa-user-plus me-2"></i>Agregar Primer Cliente
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Editar Cliente -->
+<div class="modal fade" id="editarClienteModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Editar Cliente</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editarClienteForm">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Nombre Completo *</label>
+                            <input type="text" class="form-control" name="nombre" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Empresa</label>
+                            <input type="text" class="form-control" name="empresa">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Email *</label>
+                            <input type="email" class="form-control" name="email" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Teléfono</label>
+                            <input type="tel" class="form-control" name="telefono">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Categoría</label>
+                            <select class="form-select" name="categoria">
+                                <option value="Básico">Básico</option>
+                                <option value="Estándar">Estándar</option>
+                                <option value="Premium">Premium</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Estado</label>
+                            <select class="form-select" name="estado">
+                                <option value="Prospecto">Prospecto</option>
+                                <option value="Activo">Activo</option>
+                                <option value="Inactivo">Inactivo</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Origen</label>
+                            <select class="form-select" name="origen">
+                                <option value="Web">Web</option>
+                                <option value="Referido">Referido</option>
+                                <option value="Marketing">Marketing</option>
+                                <option value="Evento">Evento</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Notas</label>
+                        <textarea class="form-control" name="notas" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="guardarCambios()">Guardar Cambios</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Agregar Nota -->
+<div class="modal fade" id="agregarNotaModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Agregar Nota al Cliente</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="agregarNotaForm">
+                    <div class="mb-3">
+                        <label class="form-label">Nota *</label>
+                        <textarea class="form-control" name="nota" rows="4" required 
+                                  placeholder="Escribe la nota o comentario sobre el cliente..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success" onclick="guardarNota()">Guardar Nota</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Variables globales
+let clienteActual = null;
+
+// Funciones de filtrado y búsqueda
+function filtrarClientes() {
+    const nombre = document.getElementById('searchNombre').value.toLowerCase();
+    const categoria = document.getElementById('filterCategoria').value;
+    const estado = document.getElementById('filterEstado').value;
+    const origen = document.getElementById('filterOrigen').value;
+    
+    const filas = document.querySelectorAll('.cliente-row');
+    
+    filas.forEach(fila => {
+        const nombreCliente = fila.dataset.nombre;
+        const categoriaCliente = fila.dataset.categoria;
+        const estadoCliente = fila.dataset.estado;
+        const origenCliente = fila.dataset.origen;
+        
+        const coincideNombre = !nombre || nombreCliente.includes(nombre);
+        const coincideCategoria = !categoria || categoriaCliente === categoria;
+        const coincideEstado = !estado || estadoCliente === estado;
+        const coincideOrigen = !origen || origenCliente === origen;
+        
+        if (coincideNombre && coincideCategoria && coincideEstado && coincideOrigen) {
+            fila.style.display = '';
+        } else {
+            fila.style.display = 'none';
+        }
+    });
+}
+
+function limpiarFiltros() {
+    document.getElementById('searchNombre').value = '';
+    document.getElementById('filterCategoria').value = '';
+    document.getElementById('filterEstado').value = '';
+    document.getElementById('filterOrigen').value = '';
+    
+    const filas = document.querySelectorAll('.cliente-row');
+    filas.forEach(fila => fila.style.display = '');
+}
+
+// Event listeners para filtros
+document.getElementById('searchNombre').addEventListener('input', filtrarClientes);
+document.getElementById('filterCategoria').addEventListener('change', filtrarClientes);
+document.getElementById('filterEstado').addEventListener('change', filtrarClientes);
+document.getElementById('filterOrigen').addEventListener('change', filtrarClientes);
+
+// Funciones de acciones
+function editarCliente(clienteId) {
+    // Aquí se cargarían los datos del cliente en el modal
+    clienteActual = clienteId;
+    document.getElementById('editarClienteModal').querySelector('.modal-title').textContent = 'Editar Cliente #' + clienteId;
+    
+    // Mostrar modal
+    const modal = new bootstrap.Modal(document.getElementById('editarClienteModal'));
+    modal.show();
+}
+
+function contactarCliente(clienteId) {
+    alert('Función de contacto en desarrollo para el cliente #' + clienteId);
+}
+
+function agregarNota(clienteId) {
+    clienteActual = clienteId;
+    document.getElementById('agregarNotaModal').querySelector('.modal-title').textContent = 'Agregar Nota - Cliente #' + clienteId;
+    
+    const modal = new bootstrap.Modal(document.getElementById('agregarNotaModal'));
+    modal.show();
+}
+
+function guardarCambios() {
+    if (clienteActual) {
+        alert('Cambios guardados para el cliente #' + clienteActual);
+        document.getElementById('editarClienteModal').querySelector('.btn-close').click();
+    }
+}
+
+function guardarNota() {
+    if (clienteActual) {
+        const nota = document.getElementById('agregarNotaForm').querySelector('[name="nota"]').value;
+        if (nota.trim()) {
+            alert('Nota agregada para el cliente #' + clienteActual + ': ' + nota);
+            document.getElementById('agregarNotaModal').querySelector('.btn-close').click();
+            document.getElementById('agregarNotaForm').reset();
+        } else {
+            alert('Por favor escribe una nota');
+        }
+    }
+}
+
+// Funciones de importación/exportación
+function importarClientes() {
+    alert('Función de importación en desarrollo');
+}
+
+function exportarClientes() {
+    alert('Función de exportación en desarrollo');
+}
+
+function comunicacionMasiva() {
+    alert('Función de comunicación masiva en desarrollo');
+}
+</script>
+
+<style>
+.avatar-circle {
+    width: 40px;
+    height: 40px;
+    background: var(--primary-color);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+
+.bg-outline-secondary {
+    background-color: #f8f9fa;
+    color: #6c757d;
+    border: 1px solid #dee2e6;
+}
+
+.table-responsive {
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+.cliente-row:hover {
+    background-color: rgba(0, 123, 255, 0.05);
+}
+</style>
+{% endblock %}

@@ -1,0 +1,313 @@
+{% extends "base.html" %}
+
+{% block title %}Panel de Empleados - Bot Financiero{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h1 class="display-6 fw-bold text-primary mb-2">
+                        <i class="fas fa-users me-3"></i>Panel de Empleados
+                    </h1>
+                    <p class="lead text-muted">Gestiona el personal de tu empresa y sus accesos al sistema</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estadísticas -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="stats-card">
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        <i class="fas fa-users fa-2x"></i>
+                    </div>
+                    <div>
+                        <h4 class="mb-0">{{ empleados|length }}</h4>
+                        <small>Total Empleados</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="stats-card">
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        <i class="fas fa-user-check fa-2x"></i>
+                    </div>
+                    <div>
+                        <h4 class="mb-0">{{ empleados|selectattr('is_active', 'equalto', true)|list|length }}</h4>
+                        <small>Empleados Activos</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="stats-card">
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        <i class="fas fa-clock fa-2x"></i>
+                    </div>
+                    <div>
+                        <h4 class="mb-0">{{ empleados|selectattr('last_login', 'defined')|list|length }}</h4>
+                        <small>Con Sesión Activa</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="stats-card">
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        <i class="fas fa-plus fa-2x"></i>
+                    </div>
+                    <div>
+                        <h4 class="mb-0">+</h4>
+                        <small>Nuevo Empleado</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Acciones -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-tools me-2"></i>Acciones Administrativas
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <a href="{{ url_for('registro') }}?role=empleado" class="btn btn-success btn-lg w-100">
+                                <i class="fas fa-user-plus me-2"></i>Agregar Empleado
+                            </a>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <button class="btn btn-info btn-lg w-100" onclick="exportarEmpleados()">
+                                <i class="fas fa-download me-2"></i>Exportar Lista
+                            </button>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <button class="btn btn-warning btn-lg w-100" onclick="enviarNotificaciones()">
+                                <i class="fas fa-bell me-2"></i>Enviar Notificaciones
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de Empleados -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list me-2"></i>Lista de Empleados
+                    </h5>
+                    <div class="d-flex gap-2">
+                        <input type="text" class="form-control form-control-sm" id="searchEmpleados" placeholder="Buscar empleado...">
+                        <select class="form-select form-select-sm" id="filterStatus">
+                            <option value="">Todos los estados</option>
+                            <option value="active">Activos</option>
+                            <option value="inactive">Inactivos</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if empleados %}
+                        <div class="table-responsive">
+                            <table class="table table-hover" id="empleadosTable">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Usuario</th>
+                                        <th>Email</th>
+                                        <th>Estado</th>
+                                        <th>Último Acceso</th>
+                                        <th>Fecha Registro</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for empleado in empleados %}
+                                    <tr data-status="{{ 'active' if empleado.is_active else 'inactive' }}">
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar me-3">
+                                                    <i class="fas fa-user-circle fa-2x text-primary"></i>
+                                                </div>
+                                                <div>
+                                                    <div class="fw-bold">{{ empleado.username }}</div>
+                                                    <small class="text-muted">ID: {{ empleado.id }}</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="text-break">{{ empleado.email }}</div>
+                                        </td>
+                                        <td>
+                                            {% if empleado.is_active %}
+                                                <span class="badge bg-success">
+                                                    <i class="fas fa-check me-1"></i>Activo
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-danger">
+                                                    <i class="fas fa-times me-1"></i>Inactivo
+                                                </span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if empleado.last_login %}
+                                                <div class="fw-bold">{{ empleado.last_login.strftime('%d/%m/%Y') }}</div>
+                                                <small class="text-muted">{{ empleado.last_login.strftime('%H:%M') }}</small>
+                                            {% else %}
+                                                <span class="text-muted">Nunca</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="fw-bold">{{ empleado.created_at.strftime('%d/%m/%Y') }}</div>
+                                            <small class="text-muted">{{ empleado.created_at.strftime('%H:%M') }}</small>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <a href="{{ url_for('ver_empleado', user_id=empleado.id) }}" class="btn btn-sm btn-outline-primary" title="Ver perfil">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                <button class="btn btn-sm btn-outline-warning" title="Editar" onclick="editarEmpleado({{ empleado.id }})">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                {% if empleado.is_active %}
+                                                    <button class="btn btn-sm btn-outline-danger" title="Desactivar" onclick="toggleEmpleado({{ empleado.id }}, false)">
+                                                        <i class="fas fa-user-slash"></i>
+                                                    </button>
+                                                {% else %}
+                                                    <button class="btn btn-sm btn-outline-success" title="Activar" onclick="toggleEmpleado({{ empleado.id }}, true)">
+                                                        <i class="fas fa-user-check"></i>
+                                                    </button>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-users fa-4x text-muted mb-4"></i>
+                            <h4 class="text-muted mb-3">No hay empleados registrados</h4>
+                            <p class="text-muted mb-4">
+                                Comienza agregando empleados a tu sistema para gestionar sus accesos.
+                            </p>
+                            <a href="{{ url_for('registro') }}?role=empleado" class="btn btn-primary btn-lg">
+                                <i class="fas fa-user-plus me-2"></i>Agregar Primer Empleado
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Editar Empleado -->
+<div class="modal fade" id="editarEmpleadoModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Editar Empleado</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editarEmpleadoForm">
+                    <div class="mb-3">
+                        <label for="editUsername" class="form-label">Usuario</label>
+                        <input type="text" class="form-control" id="editUsername" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editEmail" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="editEmail" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editStatus" class="form-label">Estado</label>
+                        <select class="form-select" id="editStatus">
+                            <option value="true">Activo</option>
+                            <option value="false">Inactivo</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="guardarCambios()">Guardar Cambios</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Búsqueda y filtrado
+document.getElementById('searchEmpleados').addEventListener('input', function() {
+    const searchTerm = this.value.toLowerCase();
+    const rows = document.querySelectorAll('#empleadosTable tbody tr');
+    
+    rows.forEach(row => {
+        const username = row.cells[0].textContent.toLowerCase();
+        const email = row.cells[1].textContent.toLowerCase();
+        const status = row.getAttribute('data-status');
+        const filterStatus = document.getElementById('filterStatus').value;
+        
+        const matchesSearch = username.includes(searchTerm) || email.includes(searchTerm);
+        const matchesFilter = !filterStatus || status === filterStatus;
+        
+        row.style.display = matchesSearch && matchesFilter ? '' : 'none';
+    });
+});
+
+document.getElementById('filterStatus').addEventListener('change', function() {
+    document.getElementById('searchEmpleados').dispatchEvent(new Event('input'));
+});
+
+// Funciones de gestión
+function editarEmpleado(empleadoId) {
+    // Aquí se cargarían los datos del empleado en el modal
+    document.getElementById('editarEmpleadoModal').classList.add('show');
+    document.getElementById('editarEmpleadoModal').style.display = 'block';
+}
+
+function toggleEmpleado(empleadoId, activar) {
+    const action = activar ? 'activar' : 'desactivar';
+    if (confirm(`¿Estás seguro de que quieres ${action} este empleado?`)) {
+        // Aquí se haría la llamada AJAX para cambiar el estado
+        alert(`Empleado ${action}do exitosamente`);
+        location.reload();
+    }
+}
+
+function exportarEmpleados() {
+    alert('Función de exportación en desarrollo');
+}
+
+function enviarNotificaciones() {
+    alert('Función de notificaciones en desarrollo');
+}
+
+function guardarCambios() {
+    alert('Cambios guardados exitosamente');
+    document.getElementById('editarEmpleadoModal').classList.remove('show');
+    document.getElementById('editarEmpleadoModal').style.display = 'none';
+}
+</script>
+{% endblock %}

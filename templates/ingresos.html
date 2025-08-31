@@ -1,0 +1,247 @@
+{% extends "base.html" %}
+
+{% block title %}Gestión de Ingresos - Bot Financiero{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h1 class="display-6 fw-bold text-primary mb-2">
+                        <i class="fas fa-money-bill-wave me-3"></i>Gestión de Ingresos
+                    </h1>
+                    <p class="lead text-muted">Registra tus ingresos y el sistema los distribuirá automáticamente</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Formulario de Nuevo Ingreso -->
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-plus me-2"></i>Nuevo Ingreso
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label for="monto" class="form-label">
+                                <i class="fas fa-dollar-sign me-2"></i>Monto
+                            </label>
+                            <input type="number" step="0.01" min="0" class="form-control" id="monto" name="monto" required>
+                            <div class="form-text">Ingresa el monto de tu sueldo o ingreso</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="descripcion" class="form-label">
+                                <i class="fas fa-align-left me-2"></i>Descripción
+                            </label>
+                            <input type="text" class="form-control" id="descripcion" name="descripcion" required>
+                            <div class="form-text">Ej: Sueldo mensual, Bono, Freelance</div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="categoria" class="form-label">
+                                <i class="fas fa-tags me-2"></i>Categoría
+                            </label>
+                            <select class="form-select" id="categoria" name="categoria" required>
+                                <option value="">Selecciona una categoría</option>
+                                <option value="Sueldo Base">Sueldo Base</option>
+                                <option value="Bono por Rendimiento">Bono por Rendimiento</option>
+                                <option value="Horas Extras">Horas Extras</option>
+                                <option value="Freelance">Freelance</option>
+                                <option value="Inversiones">Inversiones</option>
+                                <option value="Rentas">Rentas</option>
+                                <option value="Comisiones">Comisiones</option>
+                                <option value="Otros Ingresos">Otros Ingresos</option>
+                            </select>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="fas fa-save me-2"></i>Registrar Ingreso
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Información de Distribución -->
+            <div class="card mt-3">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>Distribución Automática
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6 mb-2">
+                            <div class="bg-primary text-white rounded p-2">
+                                <small>Gastos Fijos</small>
+                                                                 <div class="fw-bold">50%</div>
+                            </div>
+                        </div>
+                                                 <div class="col-6 mb-2">
+                             <div class="bg-success text-white rounded p-2">
+                                 <small>Ahorro</small>
+                                 <div class="fw-bold">20%</div>
+                             </div>
+                         </div>
+                         <div class="col-6 mb-2">
+                             <div class="bg-info text-white rounded p-2">
+                                 <small>Educación</small>
+                                 <div class="fw-bold">15%</div>
+                             </div>
+                         </div>
+                         <div class="col-6 mb-2">
+                             <div class="bg-warning text-white rounded p-2">
+                                 <small>Disfrute</small>
+                                 <div class="fw-bold">10%</div>
+                             </div>
+                         </div>
+                         <div class="col-6 mb-2">
+                             <div class="bg-danger text-white rounded p-2">
+                                 <small>Donación</small>
+                                 <div class="fw-bold">5%</div>
+                             </div>
+                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tabla de Ingresos -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list me-2"></i>Historial de Ingresos
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if ingresos %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Descripción</th>
+                                        <th>Categoría</th>
+                                        <th>Monto</th>
+                                        <th>Distribución</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for ingreso in ingresos.items %}
+                                    <tr>
+                                        <td>
+                                            <div class="fw-bold">{{ ingreso.fecha.strftime('%d/%m/%Y') }}</div>
+                                            <small class="text-muted">{{ ingreso.fecha.strftime('%H:%M') }}</small>
+                                        </td>
+                                        <td>
+                                            <div class="fw-bold">{{ ingreso.descripcion }}</div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-primary">{{ ingreso.categoria }}</span>
+                                        </td>
+                                        <td>
+                                            <div class="fw-bold text-success">${{ "%.2f"|format(ingreso.monto) }}</div>
+                                        </td>
+                                        <td>
+                                                                                         <div class="row g-1">
+                                                 <div class="col-2">
+                                                     <small class="d-block text-primary">50%</small>
+                                                     <small class="d-block text-muted">${{ "%.2f"|format(ingreso.monto * 0.50) }}</small>
+                                                 </div>
+                                                 <div class="col-2">
+                                                     <small class="d-block text-success">20%</small>
+                                                     <small class="d-block text-muted">${{ "%.2f"|format(ingreso.monto * 0.20) }}</small>
+                                                 </div>
+                                                 <div class="col-2">
+                                                     <small class="d-block text-info">15%</small>
+                                                     <small class="d-block text-muted">${{ "%.2f"|format(ingreso.monto * 0.15) }}</small>
+                                                 </div>
+                                                 <div class="col-2">
+                                                     <small class="d-block text-warning">10%</small>
+                                                     <small class="d-block text-muted">${{ "%.2f"|format(ingreso.monto * 0.10) }}</small>
+                                                 </div>
+                                                 <div class="col-2">
+                                                     <small class="d-block text-danger">5%</small>
+                                                     <small class="d-block text-muted">${{ "%.2f"|format(ingreso.monto * 0.05) }}</small>
+                                                 </div>
+                                             </div>
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary" title="Ver detalles">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-warning" title="Editar">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Resumen -->
+                        <div class="row mt-4">
+                            <div class="col-md-3">
+                                <div class="text-center p-3 bg-light rounded">
+                                    <h6 class="text-muted">Total Ingresos</h6>
+                                    <h4 class="text-primary mb-0">
+                                        ${{ "%.2f"|format(ingresos.items|sum(attribute='monto')) if ingresos.items else 0.00 }}
+                                    </h4>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-center p-3 bg-light rounded">
+                                    <h6 class="text-muted">Promedio</h6>
+                                    <h4 class="text-success mb-0">
+                                        ${{ "%.2f"|format((ingresos|sum(attribute='monto')) / ingresos.total) if ingresos.total > 0 else 0.00 }}
+                                    </h4>
+                                </div>
+                            </div>
+                                                         <div class="col-md-3">
+                                 <div class="text-center p-3 bg-light rounded">
+                                     <h6 class="text-muted">Total Ahorro</h6>
+                                     <h4 class="text-info mb-0">
+                                         ${{ "%.2f"|format((ingresos.items|sum(attribute='monto')) * 0.20) if ingresos.items else 0.00 }}
+                                     </h4>
+                                 </div>
+                             </div>
+                             <div class="col-md-3">
+                                 <div class="text-center p-3 bg-light rounded">
+                                     <h6 class="text-muted">Total Gastos Fijos</h6>
+                                     <h4 class="text-warning mb-0">
+                                         ${{ "%.2f"|format((ingresos.items|sum(attribute='monto')) * 0.50) if ingresos.items else 0.00 }}
+                                     </h4>
+                                 </div>
+                             </div>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-inbox fa-4x text-muted mb-4"></i>
+                            <h4 class="text-muted mb-3">No hay ingresos registrados</h4>
+                            <p class="text-muted mb-4">
+                                Comienza registrando tu primer ingreso para ver cómo funciona la distribución automática.
+                            </p>
+                            <div class="alert alert-info">
+                                <i class="fas fa-lightbulb me-2"></i>
+                                <strong>Consejo:</strong> Registra todos tus ingresos para tener un control completo de tus finanzas.
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

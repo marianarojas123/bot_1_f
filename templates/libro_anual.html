@@ -1,0 +1,282 @@
+{% extends "base.html" %}
+
+{% block title %}Libro Anual - Bot Financiero{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-warning text-white">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <h4 class="mb-0">
+                                <i class="fas fa-calendar me-2"></i>Libro Anual {{ año }}
+                            </h4>
+                        </div>
+                        <div class="col-md-6">
+                            <form method="GET" class="d-flex">
+                                <select class="form-select me-2" name="año" onchange="this.form.submit()">
+                                    {% for a in range(2020, 2031) %}
+                                    <option value="{{ a }}" {% if año == a %}selected{% endif %}>{{ a }}</option>
+                                    {% endfor %}
+                                </select>
+                                <button type="submit" class="btn btn-light">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-4">
+                            <div class="border-end">
+                                <h3 class="text-success">${{ "%.2f"|format(total_ingresos) }}</h3>
+                                <small class="text-muted">Total Ingresos del Año</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="border-end">
+                                <h3 class="text-danger">${{ "%.2f"|format(total_egresos) }}</h3>
+                                <small class="text-muted">Total Egresos del Año</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <h3 class="{% if balance_año >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                ${{ "%.2f"|format(balance_año) }}
+                            </h3>
+                            <small class="text-muted">Balance del Año</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Análisis por Meses -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-line me-2"></i>Análisis Mensual del {{ año }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead class="table-primary">
+                                <tr>
+                                    <th>Mes</th>
+                                    <th>Ingresos</th>
+                                    <th>Egresos</th>
+                                    <th>Balance</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% set meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'] %}
+                                {% for i in range(1, 13) %}
+                                <tr>
+                                    <td><strong>{{ meses[i-1] }}</strong></td>
+                                    <td class="text-success">${{ "%.2f"|format(ingresos_por_mes[i]) }}</td>
+                                    <td class="text-danger">${{ "%.2f"|format(egresos_por_mes[i]) }}</td>
+                                    {% set balance_mes = ingresos_por_mes[i] - egresos_por_mes[i] %}
+                                    <td class="{% if balance_mes >= 0 %}text-success{% else %}text-danger{% endif %} fw-bold">
+                                        ${{ "%.2f"|format(balance_mes) }}
+                                    </td>
+                                    <td>
+                                        {% if balance_mes >= 0 %}
+                                            <span class="badge bg-success">Positivo</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Negativo</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <!-- Análisis por Categorías de Ingresos -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-pie me-2"></i>Ingresos por Categoría ({{ año }})
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if ingresos_por_categoria %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead class="table-success">
+                                <tr>
+                                    <th>Categoría</th>
+                                    <th>Total</th>
+                                    <th>Porcentaje</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for categoria, monto in ingresos_por_categoria.items() %}
+                                <tr>
+                                    <td>{{ categoria }}</td>
+                                    <td class="text-success fw-bold">${{ "%.2f"|format(monto) }}</td>
+                                    <td>{{ "%.1f"|format((monto / total_ingresos * 100) if total_ingresos > 0 else 0) }}%</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-3">
+                        <i class="fas fa-chart-pie fa-2x text-muted mb-2"></i>
+                        <p class="text-muted mb-0">No hay ingresos para este año</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Análisis por Categorías de Egresos -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>Egresos por Categoría ({{ año }})
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if egresos_por_categoria %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead class="table-danger">
+                                <tr>
+                                    <th>Categoría</th>
+                                    <th>Total</th>
+                                    <th>Porcentaje</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for categoria, monto in egresos_por_categoria.items() %}
+                                <tr>
+                                    <td>{{ categoria }}</td>
+                                    <td class="text-danger fw-bold">${{ "%.2f"|format(monto) }}</td>
+                                    <td>{{ "%.1f"|format((monto / total_egresos * 100) if total_egresos > 0 else 0) }}%</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-3">
+                        <i class="fas fa-chart-bar fa-2x text-muted mb-2"></i>
+                        <p class="text-muted mb-0">No hay egresos para este año</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resumen de Transacciones -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list me-2"></i>Resumen de Transacciones del {{ año }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <h4 class="text-success">{{ ingresos|length }}</h4>
+                            <small class="text-muted">Total Ingresos</small>
+                        </div>
+                        <div class="col-md-3">
+                            <h4 class="text-danger">{{ egresos|length }}</h4>
+                            <small class="text-muted">Total Egresos</small>
+                        </div>
+                        <div class="col-md-3">
+                            <h4 class="text-primary">{{ ingresos|length + egresos|length }}</h4>
+                            <small class="text-muted">Total Transacciones</small>
+                        </div>
+                        <div class="col-md-3">
+                            <h4 class="{% if balance_año >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                {{ "%.1f"|format((balance_año / total_ingresos * 100) if total_ingresos > 0 else 0) }}%
+                            </h4>
+                            <small class="text-muted">% de Ahorro</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navegación -->
+    <div class="row mt-4">
+        <div class="col-12 text-center">
+            <div class="btn-group" role="group">
+                <a href="{{ url_for('libro_anual', año=año-1) }}" class="btn btn-outline-warning">
+                    <i class="fas fa-chevron-left me-2"></i>Año Anterior
+                </a>
+                <a href="{{ url_for('libro_anual') }}" class="btn btn-warning">Año Actual</a>
+                <a href="{{ url_for('libro_anual', año=año+1) }}" class="btn btn-outline-warning">
+                    Año Siguiente<i class="fas fa-chevron-right ms-2"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Enlaces a otros libros -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-book me-2"></i>Otros Libros Contables
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                        <a href="{{ url_for('libro_diario') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-calendar-day me-2"></i>Libro Diario
+                        </a>
+                        <a href="{{ url_for('libro_mensual') }}" class="btn btn-outline-success">
+                            <i class="fas fa-calendar-alt me-2"></i>Libro Mensual
+                        </a>
+                        <a href="{{ url_for('gestionar_ingresos') }}" class="btn btn-outline-success">
+                            <i class="fas fa-plus-circle me-2"></i>Registrar Ingreso
+                        </a>
+                        <a href="{{ url_for('gestionar_egresos') }}" class="btn btn-outline-danger">
+                            <i class="fas fa-minus-circle me-2"></i>Registrar Egreso
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Auto-submit del formulario cuando cambie el año
+    document.addEventListener('DOMContentLoaded', function() {
+        const añoSelect = document.querySelector('select[name="año"]');
+        
+        if (añoSelect) {
+            añoSelect.addEventListener('change', function() {
+                this.form.submit();
+            });
+        }
+    });
+</script>
+{% endblock %}

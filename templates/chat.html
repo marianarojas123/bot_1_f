@@ -1,0 +1,250 @@
+{% extends "base.html" %}
+
+{% block title %}Chat Bot - Bot Financiero{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h1 class="display-6 fw-bold text-primary mb-2">
+                        <i class="fas fa-robot me-3"></i>Chat Bot Financiero
+                    </h1>
+                    <p class="lead text-muted">Haz preguntas sobre finanzas personales y recibe consejos inteligentes</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Chat Principal -->
+        <div class="col-md-8 mb-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-comments me-2"></i>Conversación con el Bot
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="chat-container" class="chat-container mb-3">
+                        <div class="message bot-message">
+                            <div class="d-flex align-items-start">
+                                <div class="me-2">
+                                    <i class="fas fa-robot text-primary"></i>
+                                </div>
+                                <div>
+                                    <strong>Bot Financiero:</strong><br>
+                                    ¡Hola! Soy tu asistente financiero personal. Puedo ayudarte con:
+                                    <ul class="mb-0 mt-2">
+                                        <li>Distribución de sueldo</li>
+                                        <li>Estrategias de ahorro</li>
+                                        <li>Consejos de presupuesto</li>
+                                        <li>Educación financiera</li>
+                                    </ul>
+                                    <br>¿En qué puedo ayudarte hoy?
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <form id="chat-form" class="d-flex">
+                        <input type="text" id="mensaje-input" class="form-control me-2" placeholder="Escribe tu pregunta..." required>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Panel de Ayuda -->
+        <div class="col-md-4">
+            <!-- Preguntas Frecuentes -->
+            <div class="card mb-3">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-question-circle me-2"></i>Preguntas Frecuentes
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-2">
+                        <button class="btn btn-outline-info btn-sm w-100 text-start" onclick="hacerPregunta('¿Cómo funciona la distribución del sueldo?')">
+                            <i class="fas fa-percentage me-2"></i>Distribución del sueldo
+                        </button>
+                    </div>
+                    <div class="mb-2">
+                        <button class="btn btn-outline-info btn-sm w-100 text-start" onclick="hacerPregunta('¿Cuánto debo ahorrar?')">
+                            <i class="fas fa-piggy-bank me-2"></i>¿Cuánto ahorrar?
+                        </button>
+                    </div>
+                    <div class="mb-2">
+                        <button class="btn btn-outline-info btn-sm w-100 text-start" onclick="hacerPregunta('¿Cómo hacer un presupuesto?')">
+                            <i class="fas fa-calculator me-2"></i>Hacer presupuesto
+                        </button>
+                    </div>
+                    <div class="mb-2">
+                        <button class="btn btn-outline-info btn-sm w-100 text-start" onclick="hacerPregunta('¿Qué son los gastos básicos?')">
+                            <i class="fas fa-home me-2"></i>Gastos básicos
+                        </button>
+                    </div>
+                    <div class="mb-2">
+                        <button class="btn btn-outline-info btn-sm w-100 text-start" onclick="hacerPregunta('¿Por qué es importante la educación financiera?')">
+                            <i class="fas fa-graduation-cap me-2"></i>Educación financiera
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Consejos Rápidos -->
+            <div class="card mb-3">
+                <div class="card-header bg-success text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-lightbulb me-2"></i>Consejos Rápidos
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-success alert-sm">
+                        <i class="fas fa-check-circle me-2"></i>
+                        <strong>Regla 50/30/20:</strong> 50% necesidades, 30% deseos, 20% ahorro
+                    </div>
+                    <div class="alert alert-info alert-sm">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Fondo de emergencia:</strong> 3-6 meses de gastos
+                    </div>
+                    <div class="alert alert-warning alert-sm">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Evita deudas:</strong> No gastes más de lo que ganas
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Estadísticas del Chat -->
+            <div class="card">
+                <div class="card-header bg-warning text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>Estadísticas
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <h5 class="text-primary mb-0" id="mensajes-enviados">0</h5>
+                            <small class="text-muted">Mensajes</small>
+                        </div>
+                        <div class="col-6">
+                            <h5 class="text-success mb-0" id="respuestas-bot">0</h5>
+                            <small class="text-muted">Respuestas</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let mensajesEnviados = 0;
+let respuestasBot = 0;
+
+document.getElementById('chat-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const mensajeInput = document.getElementById('mensaje-input');
+    const mensaje = mensajeInput.value.trim();
+    
+    if (mensaje) {
+        enviarMensaje(mensaje);
+        mensajeInput.value = '';
+    }
+});
+
+function enviarMensaje(mensaje) {
+    // Agregar mensaje del usuario
+    agregarMensaje(mensaje, 'user');
+    mensajesEnviados++;
+    actualizarEstadisticas();
+    
+    // Simular respuesta del bot
+    setTimeout(() => {
+        obtenerRespuestaBot(mensaje);
+    }, 1000);
+}
+
+function agregarMensaje(texto, tipo) {
+    const chatContainer = document.getElementById('chat-container');
+    const mensajeDiv = document.createElement('div');
+    mensajeDiv.className = `message ${tipo}-message`;
+    
+    if (tipo === 'user') {
+        mensajeDiv.innerHTML = `
+            <div class="d-flex align-items-start justify-content-end">
+                <div class="text-end">
+                    <strong>Tú:</strong><br>
+                    ${texto}
+                </div>
+                <div class="ms-2">
+                    <i class="fas fa-user text-primary"></i>
+                </div>
+            </div>
+        `;
+    } else {
+        mensajeDiv.innerHTML = `
+            <div class="d-flex align-items-start">
+                <div class="me-2">
+                    <i class="fas fa-robot text-primary"></i>
+                </div>
+                <div>
+                    <strong>Bot Financiero:</strong><br>
+                    ${texto}
+                </div>
+            </div>
+        `;
+    }
+    
+    chatContainer.appendChild(mensajeDiv);
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+}
+
+function obtenerRespuestaBot(mensaje) {
+    // Hacer petición al API del bot
+    fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ mensaje: mensaje })
+    })
+    .then(response => response.json())
+    .then(data => {
+        agregarMensaje(data.respuesta, 'bot');
+        respuestasBot++;
+        actualizarEstadisticas();
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        agregarMensaje('Lo siento, hubo un error al procesar tu mensaje. ¿Puedes intentarlo de nuevo?', 'bot');
+        respuestasBot++;
+        actualizarEstadisticas();
+    });
+}
+
+function hacerPregunta(pregunta) {
+    document.getElementById('mensaje-input').value = pregunta;
+    document.getElementById('chat-form').dispatchEvent(new Event('submit'));
+}
+
+function actualizarEstadisticas() {
+    document.getElementById('mensajes-enviados').textContent = mensajesEnviados;
+    document.getElementById('respuestas-bot').textContent = respuestasBot;
+}
+
+// Permitir envío con Enter
+document.getElementById('mensaje-input').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        document.getElementById('chat-form').dispatchEvent(new Event('submit'));
+    }
+});
+</script>
+{% endblock %}
