@@ -815,7 +815,7 @@ def create_admin_user():
             telefono='+1234567890',
             departamento='Administración',
             salario=0,
-            fecha_contratacion=datetime.now(),
+            fecha_contratacion=datetime.utcnow(),
             permisos_especiales='all',
             is_active=True
         )
