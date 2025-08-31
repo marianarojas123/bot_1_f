@@ -440,7 +440,7 @@ def ingresos():
         # Crear ingreso
         ingreso = Ingreso(
             monto=monto,
-            descripcion=SecurityManager.sanitize_input(descripcion),
+            descripcion=descripcion,  # Simplificado sin sanitización
             categoria=categoria,
             user_id=current_user.id
         )
@@ -788,10 +788,13 @@ def handle_exception(e):
     app.logger.error(f'Unhandled exception: {str(e)}')
     return render_template('500.html'), 500
 
-# Middleware para agregar headers de seguridad
+# Middleware para agregar headers de seguridad básicos
 @app.after_request
 def add_security_headers_after_request(response):
-    return add_security_headers(response)
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-Frame-Options'] = 'DENY'
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    return response
 
 # Función para crear usuario administrador
 def create_admin_user():
